@@ -115,10 +115,9 @@ public class AntFarmRpcCall {
         return RpcUtil.request("com.alipay.antfarm.listToolTaskDetails", args1);
     }
 
-    public static String receiveToolTaskReward(String awardType, int rewardCount, String taskType) {
-        String args1 = "[{\"ignoreLimit\":false,\"requestType\":\"NORMAL\",\"rewardCount\":"
-                + rewardCount + ",\"rewardType\":\"" + awardType +
-                "\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"taskType\":\""
+    public static String receiveToolTaskReward(String rewardType, int rewardCount, String taskType) {
+        String args1 = "[{\"ignoreLimit\":false,\"requestType\":\"NORMAL\",\"rewardCount\":" + rewardCount
+                + ",\"rewardType\":\"" + rewardType + "\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"taskType\":\""
                 + taskType + "\",\"version\":\"" + VERSION + "\"}]";
         return RpcUtil.request("com.alipay.antfarm.receiveToolTaskReward", args1);
     }
@@ -285,6 +284,11 @@ public class AntFarmRpcCall {
                         + VERSION + "\"}]");
     }
 
+    public static String collectKitchenGarbage() {
+        return RpcUtil.request("com.alipay.antfarm.collectKitchenGarbage",
+                "[{\"requestType\":\"RPC\",\"sceneCode\":\"ANTFARM\",\"source\":\"VILLA\",\"version\":\"unknown\"}]");
+    }
+
     /* 日常任务 */
 
     public static String doFarmTask(String bizKey) {
@@ -332,5 +336,23 @@ public class AntFarmRpcCall {
                 "[{\"friendFarmId\":\"" + friendFarmId
                         + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"ANTFARM\",\"source\":\"H5\",\"version\":\""
                         + VERSION + "\"}]");
+    }
+
+    /* 小鸡日记 */
+    public static String queryChickenDiaryList() {
+        return RpcUtil.request("com.alipay.antfarm.queryChickenDiaryList",
+                "[{\"requestType\":\"NORMAL\",\"sceneCode\":\"DIARY\",\"source\":\"antfarm_icon\"}]");
+    }
+
+    public static String queryChickenDiary(String queryDayStr) {
+        return RpcUtil.request("com.alipay.antfarm.queryChickenDiary",
+                "[{\"queryDayStr\":\"" + queryDayStr
+                        + "\",\"requestType\":\"NORMAL\",\"sceneCode\":\"DIARY\",\"source\":\"antfarm_icon\"}]");
+    }
+
+    public static String diaryTietie(String diaryDate, String roleId) {
+        return RpcUtil.request("com.alipay.antfarm.diaryTietie",
+                "[{\"diaryDate\":\"" + diaryDate + "\",\"requestType\":\"NORMAL\",\"roleId\":\"" + roleId
+                        + "\",\"sceneCode\":\"DIARY\",\"source\":\"antfarm_icon\"}]");
     }
 }

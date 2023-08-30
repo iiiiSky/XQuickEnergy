@@ -131,16 +131,16 @@ public class Reserve {
                 s = ReserveRpcCall.exchangeTree(projectId);
                 jo = new JSONObject(s);
                 if ("SUCCESS".equals(jo.getString("resultCode"))) {
-                    int vitalityAmount = jo.getInt("vitalityAmount");
+                    int vitalityAmount = jo.optInt("vitalityAmount",0);
                     appliedTimes = Statistics.getReserveTimes(projectId) + 1;
                     String str = "领保护地🏕️[" + itemName + "]#第" + appliedTimes + "次"
-                            + (vitalityAmount > 0 ? "-获得活力值" + vitalityAmount : "");
+                            + (vitalityAmount > 0 ? "-活力值+" + vitalityAmount : "");
                     Log.forest(str);
                     Statistics.reserveToday(projectId, 1);
                 } else {
                     Log.recordLog(jo.getString("resultDesc"), jo.toString());
                     Log.forest("领保护地🏕️[" + itemName + "]#发生未知错误，停止申请");
-                    Statistics.reserveToday(projectId, count);
+                    //Statistics.reserveToday(projectId, count);
                     break;
                 }
                 Thread.sleep(300);
@@ -269,7 +269,7 @@ public class Reserve {
                 } else {
                     Log.recordLog(jo.getString("resultDesc"), jo.toString());
                     Log.forest("净滩行动🏖️[" + itemName + "]#发生未知错误，停止申请");
-                    Statistics.beachToday(cultivationCode);
+                    //Statistics.beachToday(cultivationCode);
                     break;
                 }
                 Thread.sleep(300);
