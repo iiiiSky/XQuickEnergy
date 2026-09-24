@@ -1,0 +1,67 @@
+name: Build Sign & Upload APK
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Build release APKs
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease -P "version=${{ github.event.release.tag_name || github.ref_name }}" || ./gradlew assembleRelease
+
+      - name: Sign every release APK
+        run: |
+          set -e
+          BT=$(ls -d ${ANDROID_HOME}/build-tools/* | sort -V | tail -n1)
+          APKSIGNER="$BT/apksigner"
+          KS="$RUNNER_TEMP/release.keystore"
+          if [ -n "${{ secrets.ANDROID_SIGNING_KEY }}" ]; then
+            echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 -d > "$KS"
+            KSPASS="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}"
+            KPPASS="${{ secrets.ANDROID_KEY_PASSWORD }}"
+            ALIAS="${{ secrets.ANDROID_KEY_ALIAS }}"
+          else
+            echo "::warning::未配置签名 Secrets，使用自动生成密钥（可安装，非正式签名）"
+            keytool -genkeypair -v -keystore "$KS" -alias ci -keyalg RSA -keysize 2048 \
+              -validity 10000 -storepass android -keypass android \
+              -dname "CN=Sesame CI, OU=Dev, O=iiiiSky, L=NA, S=NA, C=CN"
+            KSPASS=android; KPPASS=android; ALIAS=ci
+          fi
+          mkdir -p signed
+          find . -path ./signed -prune -o -path '*build/outputs/apk/*' -name '*.apk' -print | while read -r apk; do
+            base=$(basename "$apk" .apk)
+            out="signed/${base}-signed.apk"
+            cp "$apk" "$out"
+            "$APKSIGNER" sign --ks "$KS" --ks-key-alias "$ALIAS" \
+              --ks-pass "pass:$KSPASS" --key-pass "pass:$KPPASS" "$out"
+            "$APKSIGNER" verify "$out"
+            sha256sum "$out" > "signed/${base}-signed.apk.sha256"
+          done
+          ls -la signed
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            signed/*.apk
+            signed/*.sha256
+          append_body: true
